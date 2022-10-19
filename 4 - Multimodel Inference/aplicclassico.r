@@ -1,38 +1,44 @@
-##Aplicação da MTE: Estimativa do diâmetro, área seccional e volume
+# Multimodel Inference technique
+# Applying clssic fitting processes for each tested model in the first step
 
-#Restaurando o objeto models
+
+#Loading each .rda file generated in the previous step
 load(file='..\\dados\\models_AEC0144.rda');
 load(file='..\\dados\\models_IPB1.rda');
 load(file='..\\dados\\models_VT01.rda');
 
+# observating mean weights calculated for each fitted model
 pmeankoz=mean(models[[1]]$peso$peso);pmeankoz
 pmeanscho=mean(models[[2]]$peso$peso);pmeanscho
 pmeanmuh=mean(models[[3]]$peso$peso);pmeanmuh
 pmeanmax=mean(models[[4]]$peso$peso);pmeanmax
 #pmeanlee=mean(models[[5]]$peso$peso);pmeanlee
 
-#Diâmetro
+#Diameter estimative
 cub=read.csv2('..\\dados\\AEC0144_diametro.csv')
 cub=read.csv2('..\\dados\\IPB1_diametro.csv')
 cub=read.csv2('..\\dados\\VT01_diametro.csv')
 
-#Volume
+#Volume estimative
 cub=read.csv2('..\\dados\\AEC0144.csv')
 cub=read.csv2('..\\dados\\IPB1.csv')
 cub=read.csv2('..\\dados\\VT01.csv')
 
-
+# function for diameter prediction
 fdc<-function(hi,dap,ht,models,nmodel){
   return(models[[nmodel]]$fdest(hi,dap,ht,models[[nmodel]]$parms))
 }
 
+# function for sectional area prediction
 fgc<-function(hi,dap,ht,models,nmodel){
   return((pi*fdc(hi,dap,ht,models,nmodel=nmodel)^2)/40000)
 }
 
+# function for volume preditcion
 fvc<-function(hi,dap,ht,models,nmodel,hi_lower=0.2,subdivisions = 100L){
   return(integrate(fgc,lower=hi_lower,upper=hi,dap=dap,ht=ht,models=models,nmodel=nmodel,subdivisions=subdivisions)$value)
 }
+
 
 for(m in 1:length(models)){
   discm<-paste0('discm',m);

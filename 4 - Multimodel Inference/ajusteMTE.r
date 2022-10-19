@@ -1,25 +1,31 @@
-#ajusteMTE: Ajuste Mixed Taper Equations
-#dir();
-cub=read.csv2('..\\dados\\cubagem_fotos.csv') 
-View(cub)
-names(cub); #View(cub)
-cub=subset(cub,!arvore %in% c(13,21,25,27,34,36,35,74,64,66))
+# Multimodel Inference techinque
+# Applying the Mixed Taper Equations Algorithm (BERNARDI, 2020)
+# using upper-stem diameter measurements from 3 clonal Eucalyptus stands
+
+cub=read.csv2('..\\dados\\cubagem_fotos.csv') #opening dataframe
+
+#Removing outliers (later indentified)
+#cub=subset(cub,!arvore %in% c(13,21,25,27,34,36,35,74,64,66))
 #cub=subset(cub,!arvore %in% c(34,74,63,64,66))
 #cub<-subset(cub,!arv %in% c(21,38,64,73,42));
-names(cub)
+#renaming some columns
 cub$idarvore<-cub$arvore;
 cub$di<-cub$disc;
 
+# for later processing, run one genetic material at a time
 matgen<-'AEC 0144';
-matgen<-'IPB1'; #tirar a arvore 74
+matgen<-'IPB1';
 matgen<-'VT01';
+
+#filtering dataframe by genetic material
 cub<-cub[cub$matgen==matgen,];
 
-View(cub)
-nream<-100; #Número de reamostragens. Sugerido: ream<-nrow(dados)-1
+nream<-100; # Resamples number, the minimum suggested is ream<-nrow(mydf)-1
+depvar<-'di'; # Dependent variable
 
-depvar<-'di';
-
+# Example of inputting taper equations
+# fdest stands for: function for estimate diameter 
+# linear should be TRUE if the equation is linear and FALSE if it is non-linear
 models<-NULL;
 models[[1]]<-list(nom_model='Kozak',
                   model='di~b0*(dap**b1)*(ht**b2)*(((1-((hi/ht)^(1/3)))/(1-((1.3/ht)**(1/3))))**(b3*(hi/ht)**4+b4*(1/exp(dap/ht))+(b5*(((1-((hi/ht)**(1/3)))/(1-((1.3/ht)**(1/3))))**0.1))+(b6*(1/dap))+(b7*(ht**(1-((hi/ht)**(1/3)))))+(b8*((1-((hi/ht)**(1/3)))/(1-((1.3/ht)**(1/3)))))))',
@@ -62,7 +68,7 @@ models[[4]]<-list(nom_model='Max',
 
 
 
-##Ajuste clássico
+##Classic regression fitting process
 for(m in 1:length(models)){
   if(models[[m]]$linear){
     aj<-lm(models[[m]]$model,cub);
@@ -72,19 +78,19 @@ for(m in 1:length(models)){
   models[[m]]$parms<-as.list(coef(aj));
 }
 
-idarvs<-sort(unique(cub$idarvore)); 
-na<-ceiling(length(idarvs)/2);  #Número de amostras para o ajuste
+idarvs<-sort(unique(cub$idarvore)); #ordering dataframe by tree ID
+na<-ceiling(length(idarvs)/2);  #number of observations for the fitting process
 
 fhidsw<-function(ream,cub,idarvs,na){
   converged<-F;
   while(!converged){
     sidarvs<-sample(idarvs,na,replace=F);
-    saa<-subset(cub,idarvore %in% sidarvs);  #Seleção de árvores para ajuste
-    saw<-subset(cub,!idarvore %in% sidarvs); #Seleção de árvores para cálculo do peso
+    saa<-subset(cub,idarvore %in% sidarvs);  #Selecting trees for fitting
+    saw<-subset(cub,!idarvore %in% sidarvs); #Selecting tress for weight calculation
     
     hisaa<-aggregate(list(nobs=saa$di),list(hi=saa$hi),length);
-    hisaa<-subset(hisaa,nobs>=10); #hi das árvores selecionadas com restrição de no mínimo 10 observações
-  
+    hisaa<-subset(hisaa,nobs>=10); # relative height of selected trees with minimum of 10 observations
+	
     hisaw<-aggregate(list(nobs=saw$di),list(hi=saw$hi),length);
     hisaw<-subset(hisaw,nobs>=10);
     
@@ -102,7 +108,7 @@ fhidsw<-function(ream,cub,idarvs,na){
         break;
       }else{
         converged<-T;
-        erro1<-cbind(saa$hi,as.vector(saa[depvar])-predict(aj,saa)); names(erro1)<-c('hi','erro');
+        erro1<-cbind(saa$hi,as.vector(saa[depvar])-predict(aj,saa)); names(erro1)<-c('hi','erro'); #calculating errors
         erro2<-cbind(saw$hi,as.vector(saw[depvar])-predict(aj,saw)); names(erro2)<-c('hi','erro');
     
         dsw<-aggregate(list(dsw1=erro2$erro^2),list(hi=erro2$hi),sum);
@@ -149,7 +155,7 @@ for(m in 1:length(models)){
   models[[m]]$peso<-swkf;
 }  
 
-##Limpando o objeto models
+##Cleaning the object models
 for(m in 1:length(models)){
   models[[m]]$model<-NULL;
   models[[m]]$linear<-NULL;
@@ -158,3 +164,5 @@ for(m in 1:length(models)){
 
 
 save(models,file=paste0('..\\dados\\models_',gsub(' ','',matgen),'.rda'));
+
+#run again for each genetic material to save a .rda file for each one

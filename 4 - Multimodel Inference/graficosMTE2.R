@@ -1,4 +1,5 @@
-#Erros base fotos
+#Graphical analysis of MTE algorithm
+
 cub=read.csv2('..\\dados\\AEC0144_diam_final.csv')
 cub=read.csv2('..\\dados\\IPB1_diam_final.csv')
 cub=read.csv2('..\\dados\\VT01_diam_final.csv')
