@@ -9,7 +9,7 @@ library(ROCR)
 library(janitor)
 
 
-dados<-read_xlsx('Base_regressao.xlsx')
+dados<-read_xlsx('Base_regressao_20_10.xlsx')
 data<-janitor::clean_names(dados)
 
 
