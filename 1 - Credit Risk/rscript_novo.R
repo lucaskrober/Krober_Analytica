@@ -8,42 +8,79 @@ library(ggplot2)
 library(ROCR)
 library(janitor)
 
+names(dados)
 
-dados<-read_xlsx('Base_regressao_20_10.xlsx')
+dados<-read_xlsx('Base_regressao_20_10.xlsx',sheet = "inativos",col_types = c('numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'date',
+                                                                              'numeric',
+                                                                              'date',
+                                                                              'date',
+                                                                              "text",
+                                                                              'numeric',
+                                                                              'text',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'date',
+                                                                              'text',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'text',
+                                                                              'text',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'numeric',
+                                                                              'text'))
+
+
+
 data<-janitor::clean_names(dados)
 
 
+names(data)
 data$resu_cons_titu<-as.factor(data$resu_cons_titu)
 data$tipo_titu<-as.factor(data$tipo_titu)
 data$segmento<-as.factor(data$segmento)
 data$nicho<-as.factor(data$nicho)
 data$fraudador<-as.factor(data$fraudador)
 data$city<-as.factor(data$cida)
-data$tranche<-as.factor(data$teve_tranche)
-data$fili_if<-as.factor(data$fili_id)
+data$tranche<-as.factor(data$tranche)
+data$fili_id<-as.factor(data$fili_id)
 
 
-#VALOR DO TITULO PODE SAIR (tem muitos zeros)
-names(data)
 data_num<- data %>%
-  dplyr::select(fraudador,resu_cons_titu,idade_como_cliente,
-                concentracao_de_sacados,tranche,prorrogacao_liquidados,recompras_liquidados,
+  dplyr::select(fraudador,resu_cons_titu,idade_clie,
+                concen_saca,tranche,prorro_liqui,recomp_liqui,
                 perc_desc,tb_bord_perc_desc,valo_scon,limi_cred,valo_titu_orig,tipo_titu)
 data_num<-as.data.frame(data_num)
 row.names(data_num)<-data$titu_id
-
 data<-data_num
 
-
+#####
 # Separar o conjunto de dados em dados p teste e validacao
 # indices obtidos apos a aleatorizacao 
-ordena = sort(sample(nrow(data), nrow(data)*.6))
+ordena = sort(sample(nrow(data), nrow(data)*.5))
 
 #Dados para o treinamento (fica em branco após a virgula para selecionar todas as colunas) 
 treinamento<-data[ordena,]
 
 #Dados para a validacao 
 validacao<-data[-ordena,]
+#####
 
 #Regressao Logistica 
 modelo.completo <- glm(treinamento$fraudador~.,family=binomial,data=treinamento)
@@ -83,12 +120,14 @@ pred = prediction(predito, validacao$fraudador)
 # define o valor de corte, ou seja, acima desse valor, tudo vai ser considerado 1
 corte<-as.numeric(performance(pred, "auc")@y.values)
 
+corte<-0.3
+
 #cálculo do score no dataset de validacao
 validacao$score<-predict(stepwise,type='response',validacao)
+summary(validacao$score)
+
 pred<-prediction(validacao$score, validacao$fraudador)
 perf <- performance(pred,"tpr","fpr")
-plot(perf) 
-plot(perf, colorize=TRUE) #adicionar
 plot(perf, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
 abline( a =0, b = 1, lwd = 2, lty = 2, col = "gray")
 
@@ -96,11 +135,13 @@ abline( a =0, b = 1, lwd = 2, lty = 2, col = "gray")
 validacao$predito<-ifelse(predito>=corte,1,0)
 
 #Compara os resultados 
+
 tab<-table(validacao$predito,validacao$fraudador)
+
 tab
-xtable(tab)
 taxaacerto<-(tab[2,2]+tab[1,1])/sum(tab)
 taxaacerto
+
 validacao$score
 summary(validacao$score)
 validacao$predito<-as.factor(validacao$predito)

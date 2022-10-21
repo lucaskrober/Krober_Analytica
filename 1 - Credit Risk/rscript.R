@@ -8,6 +8,7 @@ library(ggplot2)
 library(ROCR)
 
 dados<-read_xlsx('Base_regressao.xlsx')
+
 data<-dados
 #####
 #data<-read_xlsx('..\\data\\Base_regressao.xlsx',col_types = c('numeric',
@@ -160,7 +161,6 @@ validacao$predito<-ifelse(predito>=corte,1,0)
 #Compara os resultados 
 tab<-table(validacao$predito,validacao$FRAUDADOR)
 tab
-xtable(tab)
 taxaacerto<-(tab[2,2]+tab[1,1])/sum(tab)
 taxaacerto
 validacao$score
@@ -208,4 +208,35 @@ taxaacerto<-(tab[2,2]+tab[1,1])/sum(tab)
 taxaacerto
 aberto2$score
 summary(aberto2$score)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dados$ano<-lubridate::year(dados$DATA_CRIA)
+
+teste<-dados %>%
+  group_by(ano) %>%
+  mutate(num_fraudes = sum(FRAUDADOR))
+
+dados$FRAUDADOR
+teste=aggregate(dados$FRAUDADOR, 
+                  list(ano=dados$ano),count())
+
+unique(teste$ano)
+unique(teste$num_fraudes)
+
 
