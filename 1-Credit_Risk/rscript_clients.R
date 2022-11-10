@@ -1,5 +1,5 @@
-install.packages("DataExplorer")
-install.packages("explore")
+# install.packages("DataExplorer")
+# install.packages("explore")
 library(readxl)
 library(dplyr)
 library(xtable)
@@ -10,11 +10,12 @@ library(janitor)
 dir()
 
 data<-read_xlsx('Base_regressaoCLIE.xlsx')
+data<-read_xlsx('Base_regressaoCLIE_Inativos.xlsx')
 
-data<-janitor::clean_names(data)
-
+data<-janitor::clean_names(data) # formatar os nomes das colunas
+summary(data$media_taxa)
 edit(data)
-data$media_taxa[21]<-3.03/2
+data$media_taxa[39]<-3.03/2 # Borderô removido 
 
 
 library(explore)
@@ -28,10 +29,16 @@ data_num<- data %>%
   dplyr::select(fraudador,idade_clie,resu_a,resu_c,resu_n,resu_r,
                 concen_sacados,prorro_liqui,recomp_liqui,media_taxa,mediana_taxa,moda_taxa,
                 valo_scon,limi_cred,media_de_valo_face,mediana_de_valo_face,media_de_valo_titu_orig,mediana_de_valo_titu_orig,resu_titu_d,resu_titu_c)
+data_num<- data %>%
+  dplyr::select(-clie_id)
+
 data_num<-as.data.frame(data_num)
 row.names(data_num)<-data$clie_id
 
 y<-vector("list",length(2:(ncol(data_num))))
+
+
+# Fazer boxplots para base toda, separando por fraudador
 
 for(i in 2:(ncol(data_num))){
   # y[[i]]<-group_by(data_num,fraudador) %>%
@@ -95,8 +102,18 @@ summary(stepwise)
 #Modelo com as variaveis indicadas pelo Stepwise
 stepwise <- glm(stepwise$formula, family=binomial,data=treinamento)
 #Modelo com as variaveis indicadas pelo Stepwise
-stepwise <- glm(fraudador ~ idade_clie + recomp_liqui + moda_taxa + 
-                  valo_scon + limi_cred + media_de_valo_face, family=binomial,data=data_num)
+# resu_a p-valor: 0,13
+# resu_c p-valor: 0,11
+# resu_n p-valor: 0,17
+
+#modelo criado pelo teste de mann-whitney:
+stepwise <- glm(fraudador ~ idade_clie + prorro_liqui + recomp_liqui + 
+                  limi_cred + media_de_valo_face, family=binomial,data=data_num)
+
+summary(stepwise)
+
+
+
 
 stepwise <- glm(fraudador ~ idade_clie + recomp_liqui + moda_taxa + 
                   valo_scon + limi_cred, family=binomial,data=data_num)
@@ -154,10 +171,14 @@ taxaacerto<-(tab[2,2]+tab[1,1])/sum(tab)
 taxaacerto
 
 
+prev_fraude<-subset(data_num,predito==0)
+prev_errado<-subset(prev_fraude,fraudador==1)
+
+idade_clie + prorro_liqui + recomp_liqui + limi_cred + media_de_valo_face
 
 
-
-
+recursao<-11/41
+precisao<-11/12
 
 validacao$score
 summary(validacao$score)
