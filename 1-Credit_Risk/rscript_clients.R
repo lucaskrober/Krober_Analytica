@@ -6,7 +6,7 @@ library(xtable)
 library(ggplot2)
 library(ROCR)
 library(janitor)
-
+library(xlsx)
 dir()
 
 data<-read_xlsx('Base_regressaoCLIE.xlsx')
@@ -34,6 +34,9 @@ data_num<- data %>%
 
 data_num<-as.data.frame(data_num)
 row.names(data_num)<-data$clie_id
+
+
+write.xlsx(x = data,file = 'Base_inativos_final.xlsx')
 
 y<-vector("list",length(2:(ncol(data_num))))
 
