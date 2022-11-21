@@ -130,7 +130,6 @@ step2 <- step(stepwise,direction="backward")
 summary(stepwise)
 summary(step2)
 #Calcula a razãoo de chances (demora um pouco pra calcular)
-
 razao<-exp(cbind(OR = coef(stepwise), confint(stepwise)))
 razao
 
