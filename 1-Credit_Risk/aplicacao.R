@@ -13,7 +13,8 @@ if (sum(as.numeric(!pacotes %in% installed.packages())) != 0) {
 }
 
 # Carregando a base de dados de clientes ATIVOS:
-data <- readxl::read_xlsx('Base_regressaoCLIE.xlsx')
+dir()
+data <- readxl::read_xlsx('Regressao_ClientesAtivos29.11.22.xlsx')
 
 # Limpando os nomes das clunas
 data <- janitor::clean_names(data)
@@ -30,3 +31,9 @@ View(data)
 
 # Salvando o resultado em um documento xlsx
 write.xlsx(data, 'previsao.xlsx',sheetName = 'Sheet 1', append = TRUE, row.names = FALSE)
+
+
+
+
+
+
